@@ -1,0 +1,37 @@
+# File version, must always be the first entry in ta docker-compose file
+version: "3.8"
+# services - will be the separate containers you want to run eg Nginx.
+services:
+  # flask app should run first then nginx will run (otherwise it wont work - thats why we have depends on)
+  flask-app:
+    # must be  looged in to the dockerhub to push but not pull the container code from docker
+    # image: [host]/[author]/[application]:[tag]
+
+    # build the dockerfile that exists in this location (put flask app name here later)
+    build: ./flask-app
+    container_name: flask-app
+
+  # This is where I put my configuration to create my nginx container
+  nginx:
+    # if this image is not available locally we will pull it from dockerhub
+    image: nginx:latest
+    # give the container a name
+    container_name: nginx
+    # this is where we specify ports for the container
+    ports:
+    # Target port -> port within the container
+    - target: 80
+    # Published port -> on the host machine
+      published: 80
+
+    # Because we are working with bind mount on nginx
+    volumes:
+      - type: bind
+        # the location of the nginx.conf you created
+        source: ./nginx.conf
+        # what the source is going to overwrite
+        target: /etc/nginx/nginx.conf
+
+    depends_on:
+    # so only if flask-app is running will this whole service run
+    - "flask-app"
